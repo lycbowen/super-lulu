@@ -1,0 +1,78 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, for example v1.0.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build Windows Release
+    runs-on: windows-latest
+
+    env:
+      APP_NAME: super-lulu
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $tag = "${{ inputs.tag }}"
+          } else {
+            $tag = "${{ github.ref_name }}"
+          }
+
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Download dependencies
+        shell: pwsh
+        run: go mod download
+
+      - name: Build
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          go build -ldflags="-H windowsgui" -o "dist/${{ env.APP_NAME }}.exe" .
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $tag = "${{ steps.version.outputs.tag }}"
+          $asset = "dist/${{ env.APP_NAME }}-$tag-windows-amd64.exe"
+          Copy-Item -Path "dist/${{ env.APP_NAME }}.exe" -Destination $asset -Force
+          "ASSET=$asset" >> $env:GITHUB_ENV
+
+      - name: Create release and upload asset
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ steps.version.outputs.tag }}"
+          $asset = "${{ env.ASSET }}"
+
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag $asset --title $tag --notes "Automated release for $tag"
+          } else {
+            gh release upload $tag $asset --clobber
+          }
