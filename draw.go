@@ -291,6 +291,7 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 	drawPanel(screen, 258, 120, 444, 245)
 	drawCenteredText(screen, "SUPER LULU", 172, color.RGBA{111, 61, 23, 255})
 	drawCenteredText(screen, "A candy platform adventure", 210, color.RGBA{135, 82, 31, 255})
+	drawCenteredText(screen, g.levelSource, 236, color.RGBA{135, 82, 31, 255})
 	drawCenteredText(screen, "Enter  Start", 260, color.RGBA{104, 56, 19, 255})
 	drawCenteredText(screen, "Up/Down  Level Select", 292, color.RGBA{104, 56, 19, 255})
 	drawCenteredText(screen, "A/D move   Space jump   J ice cream   1-6 debug levels", 330, color.RGBA{135, 82, 31, 255})
@@ -299,6 +300,7 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 func (g *Game) drawLevelSelect(screen *ebiten.Image) {
 	drawPanel(screen, 220, 92, 520, 350)
 	drawCenteredText(screen, "CHOOSE A LEVEL", 142, color.RGBA{111, 61, 23, 255})
+	drawCenteredText(screen, g.levelSource, 166, color.RGBA{135, 82, 31, 255})
 	for i, level := range g.levels {
 		y := 198 + i*58
 		locked := i > g.unlockedLevel

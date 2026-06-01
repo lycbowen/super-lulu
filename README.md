@@ -44,6 +44,8 @@ go run .
 
 关卡地图现在放在 `levels/levels.json` 中，并通过 `go:embed` 内嵌进程序。
 
+启动时会优先检查运行目录下是否存在外部 `levels/levels.json`。如果存在且内容合法，游戏会加载外部自定义关卡；如果不存在，则回落到编译时内嵌的内置关卡。主菜单和关卡选择界面会显示当前使用的是 `External custom levels` 还是 `Built-in levels`。
+
 常用字段：
 
 - `Width`：关卡总宽度

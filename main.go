@@ -27,7 +27,7 @@ func main() {
 }
 
 func newGame(assets Assets) (*Game, error) {
-	levels, err := newLevels()
+	levelPack, err := newLevelPack()
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,8 @@ func newGame(assets Assets) (*Game, error) {
 		assets:        assets,
 		sound:         newSoundManager(),
 		rng:           rand.New(rand.NewSource(time.Now().UnixNano())),
-		levels:        levels,
+		levels:        levelPack.Levels,
+		levelSource:   levelPack.SourceLabel(),
 		mode:          modeMenu,
 		unlockedLevel: 0,
 	}

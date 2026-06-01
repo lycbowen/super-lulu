@@ -152,6 +152,7 @@ type Game struct {
 	input         InputState
 	rng           *rand.Rand
 	levels        []Level
+	levelSource   string
 	level         Level
 	mode          gameMode
 	selectedLevel int
