@@ -37,6 +37,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.drawWorld(screen)
 		g.drawGameClear(screen)
 	}
+	if g.showDebug {
+		g.drawDebugOverlay(screen)
+	}
 }
 
 func drawBackground(screen *ebiten.Image, camera float64, level Level) {
@@ -319,6 +322,38 @@ func (g *Game) drawGameClear(screen *ebiten.Image) {
 	drawCenteredText(screen, fmt.Sprintf("Final score: %d", g.score), 258, color.RGBA{104, 56, 19, 255})
 	drawCenteredText(screen, fmt.Sprintf("Total resets: %d", g.falls), 290, color.RGBA{104, 56, 19, 255})
 	drawCenteredText(screen, "Enter replay   M menu", 330, color.RGBA{104, 56, 19, 255})
+}
+
+// drawDebugOverlay 显示调地图时最常用的世界坐标；鼠标世界 X 等于屏幕 X 加相机偏移。
+func (g *Game) drawDebugOverlay(screen *ebiten.Image) {
+	mouseX, mouseY := ebiten.CursorPosition()
+	worldMouseX := float64(mouseX) + g.camera
+	playerRect := g.player.Rect()
+	playerScreenX := g.player.X - g.camera
+
+	drawPanel(screen, 12, 76, 360, 150)
+	lines := []string{
+		"DEBUG F3",
+		fmt.Sprintf("Player pos: X %.0f  Y %.0f", g.player.X, g.player.Y),
+		fmt.Sprintf("Player rect: X %.0f Y %.0f W %.0f H %.0f", playerRect.X, playerRect.Y, playerRect.W, playerRect.H),
+		fmt.Sprintf("Screen pos: X %.0f  Camera %.0f / %.0f", playerScreenX, g.camera, g.level.Width),
+		fmt.Sprintf("Mouse screen: X %d  Y %d", mouseX, mouseY),
+		fmt.Sprintf("Mouse world: X %.0f  Y %d", worldMouseX, mouseY),
+	}
+	for i, line := range lines {
+		drawText(screen, line, 24, 102+i*20, color.RGBA{84, 42, 20, 255})
+	}
+
+	drawRectOutline(screen, playerRect.X-g.camera, playerRect.Y, playerRect.W, playerRect.H, color.RGBA{50, 240, 120, 230})
+	ebitenutil.DrawRect(screen, float64(mouseX), 0, 1, screenHeight, color.RGBA{255, 60, 60, 150})
+	ebitenutil.DrawRect(screen, 0, float64(mouseY), screenWidth, 1, color.RGBA{255, 60, 60, 150})
+}
+
+func drawRectOutline(screen *ebiten.Image, x, y, w, h float64, c color.Color) {
+	ebitenutil.DrawRect(screen, x, y, w, 2, c)
+	ebitenutil.DrawRect(screen, x, y+h-2, w, 2, c)
+	ebitenutil.DrawRect(screen, x, y, 2, h, c)
+	ebitenutil.DrawRect(screen, x+w-2, y, 2, h, c)
 }
 
 func drawPanel(screen *ebiten.Image, x, y, w, h float64) {

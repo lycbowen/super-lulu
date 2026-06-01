@@ -14,7 +14,10 @@ func main() {
 		log.Fatalf("failed to load assets: %v", err)
 	}
 
-	g := newGame(assets)
+	g, err := newGame(assets)
+	if err != nil {
+		log.Fatalf("failed to create game: %v", err)
+	}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Super Lulu")
@@ -23,15 +26,19 @@ func main() {
 	}
 }
 
-func newGame(assets Assets) *Game {
+func newGame(assets Assets) (*Game, error) {
+	levels, err := newLevels()
+	if err != nil {
+		return nil, err
+	}
 	g := &Game{
 		player:        &Player{Facing: 1},
 		assets:        assets,
 		rng:           rand.New(rand.NewSource(time.Now().UnixNano())),
-		levels:        newLevels(),
+		levels:        levels,
 		mode:          modeMenu,
 		unlockedLevel: 0,
 	}
 	g.loadLevel(0)
-	return g
+	return g, nil
 }

@@ -6,6 +6,9 @@ import (
 
 func (g *Game) Update() error {
 	g.input.Update()
+	if g.input.ToggleDebug {
+		g.showDebug = !g.showDebug
+	}
 	switch g.mode {
 	case modeMenu:
 		g.updateMenu()

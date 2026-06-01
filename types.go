@@ -127,18 +127,19 @@ type Assets struct {
 }
 
 type InputState struct {
-	MoveLeft   bool
-	MoveRight  bool
-	Jump       bool
-	Shoot      bool
-	Start      bool
-	Pause      bool
-	Back       bool
-	Restart    bool
-	Menu       bool
-	LevelUp    bool
-	LevelDown  bool
-	DebugLevel int
+	MoveLeft    bool
+	MoveRight   bool
+	Jump        bool
+	Shoot       bool
+	Start       bool
+	Pause       bool
+	Back        bool
+	Restart     bool
+	Menu        bool
+	LevelUp     bool
+	LevelDown   bool
+	ToggleDebug bool
+	DebugLevel  int
 }
 
 type Game struct {
@@ -157,6 +158,7 @@ type Game struct {
 	levelScore    int
 	falls         int
 	hasWeapon     bool
+	showDebug     bool
 	projectiles   []Projectile
 	shotCooldown  int
 	invulnerable  int

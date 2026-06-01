@@ -21,6 +21,7 @@ func (i *InputState) Update() {
 	i.Menu = inpututil.IsKeyJustPressed(ebiten.KeyM)
 	i.LevelUp = inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyW)
 	i.LevelDown = inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyS)
+	i.ToggleDebug = inpututil.IsKeyJustPressed(ebiten.KeyF3)
 
 	debugKeys := []ebiten.Key{
 		ebiten.KeyDigit1,
