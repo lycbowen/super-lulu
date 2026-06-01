@@ -2,12 +2,10 @@ package main
 
 import (
 	"math"
-
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 func (g *Game) Update() error {
+	g.input.Update()
 	switch g.mode {
 	case modeMenu:
 		g.updateMenu()
@@ -29,13 +27,13 @@ func (g *Game) updateMenu() {
 	if g.startDebugLevelByNumber() {
 		return
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
+	if g.input.Start {
 		g.startLevel(g.selectedLevel)
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyS) {
+	if g.input.LevelDown {
 		g.mode = modeLevelSelect
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyW) {
+	if g.input.LevelUp {
 		g.mode = modeLevelSelect
 	}
 }
@@ -44,46 +42,40 @@ func (g *Game) updateLevelSelect() {
 	if g.startDebugLevelByNumber() {
 		return
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+	if g.input.Back {
 		g.mode = modeMenu
 		return
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyW) {
+	if g.input.LevelUp {
 		g.selectedLevel = maxInt(0, g.selectedLevel-1)
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyS) {
+	if g.input.LevelDown {
 		g.selectedLevel = minInt(g.unlockedLevel, g.selectedLevel+1)
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
+	if g.input.Start {
 		g.startLevel(g.selectedLevel)
 	}
 }
 
 func (g *Game) startDebugLevelByNumber() bool {
-	keys := []ebiten.Key{
-		ebiten.KeyDigit1,
-		ebiten.KeyDigit2,
-		ebiten.KeyDigit3,
-		ebiten.KeyDigit4,
-		ebiten.KeyDigit5,
-		ebiten.KeyDigit6,
+	if g.input.DebugLevel == 0 {
+		return false
 	}
-	for i, key := range keys {
-		if i < len(g.levels) && inpututil.IsKeyJustPressed(key) {
-			g.unlockedLevel = maxInt(g.unlockedLevel, i)
-			g.startLevel(i)
-			return true
-		}
+	index := g.input.DebugLevel - 1
+	if index < len(g.levels) {
+		g.unlockedLevel = maxInt(g.unlockedLevel, index)
+		g.startLevel(index)
+		return true
 	}
 	return false
 }
 
 func (g *Game) updatePlayingMode() {
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) || inpututil.IsKeyJustPressed(ebiten.KeyP) {
+	if g.input.Pause {
 		g.mode = modePaused
 		return
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+	if g.input.Restart {
 		g.restartLevel()
 		return
 	}
@@ -91,19 +83,19 @@ func (g *Game) updatePlayingMode() {
 }
 
 func (g *Game) updatePaused() {
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) || inpututil.IsKeyJustPressed(ebiten.KeyP) {
+	if g.input.Pause {
 		g.mode = modePlaying
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+	if g.input.Restart {
 		g.restartLevel()
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyM) {
+	if g.input.Menu {
 		g.mode = modeMenu
 	}
 }
 
 func (g *Game) updateLevelClear() {
-	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
+	if g.input.Start {
 		next := g.currentLevel + 1
 		if next >= len(g.levels) {
 			g.mode = modeGameClear
@@ -111,18 +103,18 @@ func (g *Game) updateLevelClear() {
 		}
 		g.startLevel(next)
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyM) {
+	if g.input.Menu {
 		g.mode = modeMenu
 	}
 }
 
 func (g *Game) updateGameClear() {
-	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
+	if g.input.Start {
 		g.score = 0
 		g.falls = 0
 		g.startLevel(0)
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyM) || inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+	if g.input.Menu || g.input.Back {
 		g.mode = modeMenu
 	}
 }
@@ -148,6 +140,7 @@ func (g *Game) loadLevel(index int) {
 	g.resetPlayer()
 }
 
+// cloneLevel 将关卡模板复制成当前局的运行时关卡，避免收集物、敌人位置、Boss 血量等变化污染原始关卡数据。
 func cloneLevel(level Level) Level {
 	level.Platforms = append([]Rect(nil), level.Platforms...)
 	level.Collect = append([]Collectible(nil), level.Collect...)
@@ -209,6 +202,7 @@ func (g *Game) bossBlocksGoal() bool {
 	return g.level.Boss != nil && g.level.Boss.Active
 }
 
+// updateBoss 是 Boss 的主状态机：先处理冷却和仇恨，再按当前状态执行冲撞、泰山压顶或巡逻逻辑。
 func (g *Game) updateBoss() {
 	if g.level.Boss == nil || !g.level.Boss.Active {
 		return
@@ -518,6 +512,7 @@ func (g *Game) turnBossAwayFromLedge(b *Boss) {
 	b.Facing = int(signFloat(b.Speed))
 }
 
+// bossHasGroundAhead 用 Boss 脚前方的探测点判断是否有平台，防止巡逻或追击时直接走下悬崖。
 func bossHasGroundAhead(platforms []Rect, b *Boss, dir float64) bool {
 	if dir == 0 {
 		return true
@@ -573,16 +568,15 @@ func (g *Game) updatePlayer() {
 		accel = airAccel
 	}
 
-	if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+	if g.input.MoveLeft {
 		p.VX -= accel
 		p.Facing = -1
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyD) || ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+	if g.input.MoveRight {
 		p.VX += accel
 		p.Facing = 1
 	}
-	if !(ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyArrowLeft) ||
-		ebiten.IsKeyPressed(ebiten.KeyD) || ebiten.IsKeyPressed(ebiten.KeyArrowRight)) {
+	if !g.input.MoveLeft && !g.input.MoveRight {
 		if p.OnGround {
 			p.VX *= friction
 		} else {
@@ -591,11 +585,11 @@ func (g *Game) updatePlayer() {
 	}
 
 	p.VX = clamp(p.VX, -maxRunSpeed, maxRunSpeed)
-	if p.OnGround && (ebiten.IsKeyPressed(ebiten.KeySpace) || ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyArrowUp)) {
+	if p.OnGround && g.input.Jump {
 		p.VY = jumpVelocity
 		p.OnGround = false
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyJ) {
+	if g.input.Shoot {
 		g.shootIceCream()
 	}
 
@@ -662,6 +656,7 @@ func (g *Game) shootIceCream() {
 	g.shotCooldown = 18
 }
 
+// resolveHorizontal 只解决玩家横向进入平台的问题；纵向碰撞分开处理可以减少斜角卡住的情况。
 func (g *Game) resolveHorizontal() {
 	p := g.player
 	pr := p.Rect()
@@ -679,6 +674,7 @@ func (g *Game) resolveHorizontal() {
 	}
 }
 
+// resolveVertical 处理玩家上下方向的平台碰撞，并在落到平台上时设置 OnGround。
 func (g *Game) resolveVertical() {
 	p := g.player
 	p.OnGround = false

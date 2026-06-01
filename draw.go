@@ -132,14 +132,14 @@ func (g *Game) drawIceCream(screen *ebiten.Image, r Rect, camera float64, scale 
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(scale, scale)
 	op.GeoM.Translate(r.X-camera, r.Y)
-	screen.DrawImage(g.iceCream, op)
+	screen.DrawImage(g.assets.IceCream, op)
 }
 
 func (g *Game) drawOrange(screen *ebiten.Image, r Rect, camera float64, scale float64) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(scale, scale)
 	op.GeoM.Translate(r.X-camera, r.Y)
-	screen.DrawImage(g.orange, op)
+	screen.DrawImage(g.assets.Orange, op)
 }
 
 func drawEnemy(screen *ebiten.Image, r Rect, camera float64) {
@@ -168,7 +168,7 @@ func (g *Game) drawBoss(screen *ebiten.Image, boss *Boss) {
 	if boss.HitCooldown > 0 && (boss.HitCooldown/4)%2 == 0 {
 		op.ColorScale.Scale(1.35, 0.75, 0.75, 1)
 	}
-	screen.DrawImage(g.bossImage, op)
+	screen.DrawImage(g.assets.Boss, op)
 
 	barW := boss.Rect.W
 	barX := x
@@ -242,7 +242,7 @@ func (g *Game) drawPlayer(screen *ebiten.Image) {
 		op.GeoM.Translate(g.player.X-g.camera, drawY)
 	}
 	op.ColorScale.Scale(1.04, 1.04, 1.02, 1)
-	screen.DrawImage(g.player.Image, op)
+	screen.DrawImage(g.assets.Player, op)
 }
 
 func (g *Game) drawHUD(screen *ebiten.Image) {

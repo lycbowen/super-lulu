@@ -24,7 +24,6 @@ type Player struct {
 	VX       float64
 	VY       float64
 	OnGround bool
-	Image    *ebiten.Image
 	Facing   int
 	Big      bool
 }
@@ -120,11 +119,32 @@ type Level struct {
 	Theme     Theme
 }
 
+type Assets struct {
+	Player   *ebiten.Image
+	IceCream *ebiten.Image
+	Orange   *ebiten.Image
+	Boss     *ebiten.Image
+}
+
+type InputState struct {
+	MoveLeft   bool
+	MoveRight  bool
+	Jump       bool
+	Shoot      bool
+	Start      bool
+	Pause      bool
+	Back       bool
+	Restart    bool
+	Menu       bool
+	LevelUp    bool
+	LevelDown  bool
+	DebugLevel int
+}
+
 type Game struct {
 	player        *Player
-	iceCream      *ebiten.Image
-	orange        *ebiten.Image
-	bossImage     *ebiten.Image
+	assets        Assets
+	input         InputState
 	rng           *rand.Rand
 	levels        []Level
 	level         Level
