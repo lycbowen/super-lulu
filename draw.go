@@ -161,7 +161,7 @@ func (g *Game) drawWorld(screen *ebiten.Image) {
 	}
 	drawGoal(screen, g.level.Goal, g.camera)
 	if g.bossBlocksGoal() {
-		drawText(screen, g.text("Defeat Niuniu first!", "先打败妞妞！"), int(g.level.Goal.X-g.camera)-36, int(g.level.Goal.Y)-14, color.RGBA{104, 56, 19, 255})
+		drawText(screen, g.text("Defeat Niuniu first!", "先打败牛牛！"), int(g.level.Goal.X-g.camera)-36, int(g.level.Goal.Y)-14, color.RGBA{104, 56, 19, 255})
 	}
 	if boss, ok := g.lockedBossArena(); ok {
 		g.drawBossArenaGates(screen, boss)
@@ -239,7 +239,7 @@ func (g *Game) drawBoss(screen *ebiten.Image, boss *Boss) {
 		ebitenutil.DrawRect(screen, barX+1, barY+1, fill-2, 10, color.RGBA{255, 93, 76, 255})
 	}
 	if boss.State == bossWarning {
-		g.drawBossWarning(screen, boss, x, g.text("Niuniu charge!", "妞妞冲撞！"))
+		g.drawBossWarning(screen, boss, x, g.text("Niuniu charge!", "牛牛冲撞！"))
 	}
 	if boss.State == bossStompWarning || boss.State == bossStompRise || boss.State == bossStompHang || boss.State == bossStompFall {
 		g.drawBossStompCue(screen, boss)
@@ -343,7 +343,7 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 
 func (g *Game) drawMenu(screen *ebiten.Image) {
 	drawPanel(screen, 258, 120, 444, 245)
-	drawCenteredText(screen, g.text("SUPER LULU", "超级露露"), 172, color.RGBA{111, 61, 23, 255})
+	drawCenteredText(screen, g.text("SUPER LULU", "超级噜噜"), 172, color.RGBA{111, 61, 23, 255})
 	drawCenteredText(screen, g.text("A candy platform adventure", "糖果世界横版冒险"), 210, color.RGBA{135, 82, 31, 255})
 	drawCenteredText(screen, g.levelSourceLabel(), 236, color.RGBA{135, 82, 31, 255})
 	drawCenteredText(screen, g.text("Enter  Start", "回车  开始"), 260, color.RGBA{104, 56, 19, 255})
@@ -394,7 +394,7 @@ func (g *Game) drawLevelClear(screen *ebiten.Image) {
 func (g *Game) drawGameClear(screen *ebiten.Image) {
 	drawPanel(screen, 250, 128, 460, 245)
 	drawCenteredText(screen, g.text("ALL LEVELS CLEAR!", "全部关卡完成！"), 182, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, g.text("Lulu owns the candy kingdom.", "露露守住了糖果王国。"), 220, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("Lulu owns the candy kingdom.", "噜噜守住了糖果王国。"), 220, color.RGBA{104, 56, 19, 255})
 	drawCenteredText(screen, fmt.Sprintf(g.text("Final score: %d", "最终得分：%d"), g.score), 258, color.RGBA{104, 56, 19, 255})
 	drawCenteredText(screen, fmt.Sprintf(g.text("Total resets: %d", "总重来次数：%d"), g.falls), 290, color.RGBA{104, 56, 19, 255})
 	drawCenteredText(screen, g.text("Enter replay   M menu", "回车重玩   M 返回菜单"), 330, color.RGBA{104, 56, 19, 255})

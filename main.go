@@ -20,7 +20,7 @@ func main() {
 	}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("超级露露")
+	ebiten.SetWindowTitle("超级噜噜")
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
