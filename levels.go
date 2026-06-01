@@ -25,15 +25,6 @@ type LevelPack struct {
 	Path   string
 }
 
-func (p LevelPack) SourceLabel() string {
-	switch p.Source {
-	case levelSourceExternal:
-		return "External custom levels"
-	default:
-		return "Built-in levels"
-	}
-}
-
 // marshalLevelsJSON 统一用带缩进的格式导出关卡，避免生成压成一行、后续不好手改。
 func marshalLevelsJSON(levels []Level) ([]byte, error) {
 	data, err := json.MarshalIndent(levels, "", "  ")

@@ -1,7 +1,9 @@
 [
   {
     "Name": "1-1 Orange Cream Meadow",
+    "NameZH": "1-1 橙奶油草地",
     "Subtitle": "A soft first stroll through candy hills.",
+    "SubtitleZH": "在糖果小丘上的轻松第一步。",
     "Width": 3200,
     "Spawn": {
       "X": 80,
@@ -226,7 +228,7 @@
       "H": 140
     },
     "Theme": {
-      "Name": "orange cream",
+      "Name": "橙奶油",
       "Sky": [
         255,
         210,
@@ -256,7 +258,9 @@
   },
   {
     "Name": "1-2 Lemon Drop Lifts",
+    "NameZH": "1-2 柠檬糖升降台",
     "Subtitle": "Higher jumps, wider gaps, brighter candy.",
+    "SubtitleZH": "更高的跳跃，更宽的裂隙，更亮的糖果。",
     "Width": 3600,
     "Spawn": {
       "X": 80,
@@ -593,7 +597,7 @@
       "H": 140
     },
     "Theme": {
-      "Name": "lemon drop",
+      "Name": "柠檬糖",
       "Sky": [
         255,
         226,
@@ -623,7 +627,9 @@
   },
   {
     "Name": "1-3 Sunset Candy Run",
+    "NameZH": "1-3 落日糖果奔跑",
     "Subtitle": "The finale has longer runs and tighter stomps.",
+    "SubtitleZH": "第一章终点，有更长的奔跑和更紧的压顶。",
     "Width": 4000,
     "Spawn": {
       "X": 80,
@@ -921,7 +927,7 @@
       "H": 140
     },
     "Theme": {
-      "Name": "sunset candy",
+      "Name": "落日糖果",
       "Sky": [
         255,
         178,
@@ -951,7 +957,9 @@
   },
   {
     "Name": "2-1 Honeycomb Heights",
+    "NameZH": "2-1 蜂巢高地",
     "Subtitle": "Small platforms climb into a golden sky.",
+    "SubtitleZH": "小平台一路通向金色天空。",
     "Width": 4300,
     "Spawn": {
       "X": 80,
@@ -1371,7 +1379,7 @@
       "H": 140
     },
     "Theme": {
-      "Name": "honeycomb",
+      "Name": "蜂巢",
       "Sky": [
         255,
         218,
@@ -1401,7 +1409,9 @@
   },
   {
     "Name": "2-2 Marmalade Bridges",
+    "NameZH": "2-2 橘酱长桥",
     "Subtitle": "Long candy bridges with bouncy enemy lines.",
+    "SubtitleZH": "长长的糖果桥上挤满弹跳的敌人。",
     "Width": 4500,
     "Spawn": {
       "X": 80,
@@ -1731,7 +1741,7 @@
       "H": 140
     },
     "Theme": {
-      "Name": "marmalade",
+      "Name": "橘酱",
       "Sky": [
         255,
         196,
@@ -1761,7 +1771,9 @@
   },
   {
     "Name": "2-3 Golden Sprinkle Finale",
+    "NameZH": "2-3 金色糖粒终章",
     "Subtitle": "A longer final run with every trick so far.",
+    "SubtitleZH": "更长的最终奔跑，前面见过的招数全都来了。",
     "Width": 5000,
     "Spawn": {
       "X": 80,
@@ -2309,7 +2321,7 @@
       "H": 140
     },
     "Theme": {
-      "Name": "golden sprinkle",
+      "Name": "金色糖粒",
       "Sky": [
         255,
         188,

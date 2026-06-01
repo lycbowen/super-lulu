@@ -28,6 +28,9 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) updateMenu() {
+	if g.input.ToggleLang {
+		g.toggleLanguage()
+	}
 	if g.startDebugLevelByNumber() {
 		return
 	}
@@ -43,6 +46,9 @@ func (g *Game) updateMenu() {
 }
 
 func (g *Game) updateLevelSelect() {
+	if g.input.ToggleLang {
+		g.toggleLanguage()
+	}
 	if g.startDebugLevelByNumber() {
 		return
 	}

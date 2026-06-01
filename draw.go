@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"image/color"
 	"math"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -11,7 +13,59 @@ import (
 	"golang.org/x/image/font/basicfont"
 )
 
-var uiFace = textv2.NewGoXFace(basicfont.Face7x13)
+var (
+	uiFaceEN      textv2.Face = textv2.NewGoXFace(basicfont.Face7x13)
+	uiFaceZH      textv2.Face = loadChineseUIFont()
+	uiFaceENScale             = 1.0
+	uiFaceZHScale             = 1.0
+)
+
+// loadChineseUIFont 只在中文界面使用系统中文字体；英文界面保持原来的像素风字体。
+func loadChineseUIFont() textv2.Face {
+	candidates := []string{
+		"C:/Windows/Fonts/msyh.ttc",
+		"C:/Windows/Fonts/simhei.ttf",
+		"C:/Windows/Fonts/simsun.ttc",
+		"/System/Library/Fonts/Hiragino Sans GB.ttc",
+		"/System/Library/Fonts/STHeiti Medium.ttc",
+		"/System/Library/Fonts/Supplemental/Songti.ttc",
+		"/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+		"/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+	}
+	for _, path := range candidates {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		sources, err := textv2.NewGoTextFaceSourcesFromCollection(bytes.NewReader(data))
+		if err == nil && len(sources) > 0 {
+			return &textv2.GoTextFace{Source: sources[0], Size: 16}
+		}
+		source, err := textv2.NewGoTextFaceSource(bytes.NewReader(data))
+		if err == nil {
+			return &textv2.GoTextFace{Source: source, Size: 16}
+		}
+	}
+	return textv2.NewGoXFace(basicfont.Face7x13)
+}
+
+func textFaceFor(value string) textv2.Face {
+	for _, r := range value {
+		if r > 127 {
+			return uiFaceZH
+		}
+	}
+	return uiFaceEN
+}
+
+func textScaleFor(value string) float64 {
+	for _, r := range value {
+		if r > 127 {
+			return uiFaceZHScale
+		}
+	}
+	return uiFaceENScale
+}
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	drawBackground(screen, g.camera, g.level)
@@ -107,7 +161,7 @@ func (g *Game) drawWorld(screen *ebiten.Image) {
 	}
 	drawGoal(screen, g.level.Goal, g.camera)
 	if g.bossBlocksGoal() {
-		drawText(screen, "Defeat Niuniu first!", int(g.level.Goal.X-g.camera)-36, int(g.level.Goal.Y)-14, color.RGBA{104, 56, 19, 255})
+		drawText(screen, g.text("Defeat Niuniu first!", "先打败妞妞！"), int(g.level.Goal.X-g.camera)-36, int(g.level.Goal.Y)-14, color.RGBA{104, 56, 19, 255})
 	}
 	if boss, ok := g.lockedBossArena(); ok {
 		g.drawBossArenaGates(screen, boss)
@@ -185,7 +239,7 @@ func (g *Game) drawBoss(screen *ebiten.Image, boss *Boss) {
 		ebitenutil.DrawRect(screen, barX+1, barY+1, fill-2, 10, color.RGBA{255, 93, 76, 255})
 	}
 	if boss.State == bossWarning {
-		g.drawBossWarning(screen, boss, x, "Niuniu charge!")
+		g.drawBossWarning(screen, boss, x, g.text("Niuniu charge!", "妞妞冲撞！"))
 	}
 	if boss.State == bossStompWarning || boss.State == bossStompRise || boss.State == bossStompHang || boss.State == bossStompFall {
 		g.drawBossStompCue(screen, boss)
@@ -212,7 +266,7 @@ func (g *Game) drawBossStompCue(screen *ebiten.Image, boss *Boss) {
 		targetX = playerRect.X + playerRect.W/2 - boss.Rect.W/2 - g.camera
 	}
 	if boss.State == bossStompWarning {
-		g.drawBossWarning(screen, boss, boss.Rect.X-g.camera, "Taishan stomp!")
+		g.drawBossWarning(screen, boss, boss.Rect.X-g.camera, g.text("Taishan stomp!", "泰山压顶！"))
 	}
 	alpha := uint8(115)
 	if boss.State == bossStompHang || boss.State == bossStompFall {
@@ -232,7 +286,7 @@ func drawGoal(screen *ebiten.Image, r Rect, camera float64) {
 func (g *Game) drawBossArenaGates(screen *ebiten.Image, boss *Boss) {
 	drawArenaGate(screen, boss.ArenaMinX-g.camera)
 	drawArenaGate(screen, boss.ArenaMaxX-g.camera)
-	drawText(screen, "Boss arena locked", int(boss.ArenaMinX-g.camera)+18, 92, color.RGBA{104, 56, 19, 255})
+	drawText(screen, g.text("Boss arena locked", "Boss 战区域已锁定"), int(boss.ArenaMinX-g.camera)+18, 92, color.RGBA{104, 56, 19, 255})
 }
 
 func drawArenaGate(screen *ebiten.Image, x float64) {
@@ -270,37 +324,37 @@ func (g *Game) drawPlayer(screen *ebiten.Image) {
 
 func (g *Game) drawHUD(screen *ebiten.Image) {
 	drawPanel(screen, 12, 12, 655, 52)
-	drawText(screen, fmt.Sprintf("Level %d/%d", g.currentLevel+1, len(g.levels)), 28, 38, color.RGBA{96, 55, 23, 255})
-	drawText(screen, fmt.Sprintf("Score %04d", g.score), 132, 38, color.RGBA{96, 55, 23, 255})
-	drawText(screen, fmt.Sprintf("Resets %d", g.falls), 260, 38, color.RGBA{96, 55, 23, 255})
-	weapon := "Ice cream: --"
+	drawText(screen, fmt.Sprintf(g.text("Level %d/%d", "关卡 %d/%d"), g.currentLevel+1, len(g.levels)), 28, 38, color.RGBA{96, 55, 23, 255})
+	drawText(screen, fmt.Sprintf(g.text("Score %04d", "分数 %04d"), g.score), 132, 38, color.RGBA{96, 55, 23, 255})
+	drawText(screen, fmt.Sprintf(g.text("Resets %d", "重来 %d"), g.falls), 260, 38, color.RGBA{96, 55, 23, 255})
+	weapon := g.text("Ice cream: --", "冰淇淋：--")
 	if g.hasWeapon {
-		weapon = "Ice cream: J"
+		weapon = g.text("Ice cream: J", "冰淇淋：J")
 	}
 	drawText(screen, weapon, 365, 38, color.RGBA{96, 55, 23, 255})
-	size := "Size: normal"
+	size := g.text("Size: normal", "状态：普通")
 	if g.player.Big {
-		size = "Size: big"
+		size = g.text("Size: big", "状态：变大")
 	} else if g.invulnerable > 0 {
-		size = "Size: blink"
+		size = g.text("Size: blink", "状态：闪烁")
 	}
 	drawText(screen, size, 500, 38, color.RGBA{96, 55, 23, 255})
 }
 
 func (g *Game) drawMenu(screen *ebiten.Image) {
 	drawPanel(screen, 258, 120, 444, 245)
-	drawCenteredText(screen, "SUPER LULU", 172, color.RGBA{111, 61, 23, 255})
-	drawCenteredText(screen, "A candy platform adventure", 210, color.RGBA{135, 82, 31, 255})
-	drawCenteredText(screen, g.levelSource, 236, color.RGBA{135, 82, 31, 255})
-	drawCenteredText(screen, "Enter  Start", 260, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, "Up/Down  Level Select", 292, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, "A/D move   Space jump   J ice cream   1-6 debug levels", 330, color.RGBA{135, 82, 31, 255})
+	drawCenteredText(screen, g.text("SUPER LULU", "超级露露"), 172, color.RGBA{111, 61, 23, 255})
+	drawCenteredText(screen, g.text("A candy platform adventure", "糖果世界横版冒险"), 210, color.RGBA{135, 82, 31, 255})
+	drawCenteredText(screen, g.levelSourceLabel(), 236, color.RGBA{135, 82, 31, 255})
+	drawCenteredText(screen, g.text("Enter  Start", "回车  开始"), 260, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("Up/Down  Level Select", "上/下  选择关卡"), 292, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("A/D move   Space jump   J ice cream   L language", "A/D移动  空格跳跃  J冰淇淋  L语言"), 330, color.RGBA{135, 82, 31, 255})
 }
 
 func (g *Game) drawLevelSelect(screen *ebiten.Image) {
 	drawPanel(screen, 220, 92, 520, 350)
-	drawCenteredText(screen, "CHOOSE A LEVEL", 142, color.RGBA{111, 61, 23, 255})
-	drawCenteredText(screen, g.levelSource, 166, color.RGBA{135, 82, 31, 255})
+	drawCenteredText(screen, g.text("CHOOSE A LEVEL", "选择关卡"), 142, color.RGBA{111, 61, 23, 255})
+	drawCenteredText(screen, g.levelSourceLabel(), 166, color.RGBA{135, 82, 31, 255})
 	for i, level := range g.levels {
 		y := 198 + i*58
 		locked := i > g.unlockedLevel
@@ -308,42 +362,42 @@ func (g *Game) drawLevelSelect(screen *ebiten.Image) {
 		if i == g.selectedLevel {
 			prefix = "> "
 		}
-		name := prefix + level.Name
+		name := prefix + g.levelName(level)
 		c := color.RGBA{104, 56, 19, 255}
 		if locked {
-			name = "  Locked"
+			name = "  " + g.text("Locked", "未解锁")
 			c = color.RGBA{155, 125, 92, 255}
 		}
 		drawText(screen, name, 285, y, c)
 		if !locked {
-			drawText(screen, level.Subtitle, 305, y+22, color.RGBA{135, 82, 31, 255})
+			drawText(screen, g.levelSubtitle(level), 305, y+22, color.RGBA{135, 82, 31, 255})
 		}
 	}
-	drawCenteredText(screen, "Enter start   Esc menu", 405, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("Enter start   Esc menu   L language", "回车开始   Esc 返回菜单   L语言"), 405, color.RGBA{104, 56, 19, 255})
 }
 
 func (g *Game) drawPause(screen *ebiten.Image) {
 	drawPanel(screen, 310, 160, 340, 170)
-	drawCenteredText(screen, "PAUSED", 210, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, "P/Esc resume", 248, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, "R restart   M menu", 282, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("PAUSED", "已暂停"), 210, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("P/Esc resume", "P/Esc 继续"), 248, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("R restart   M menu", "R 重新开始   M 返回菜单"), 282, color.RGBA{104, 56, 19, 255})
 }
 
 func (g *Game) drawLevelClear(screen *ebiten.Image) {
 	drawPanel(screen, 270, 145, 420, 205)
-	drawCenteredText(screen, "LEVEL CLEAR!", 195, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, g.level.Name, 230, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, fmt.Sprintf("Level score: %d", g.levelScore), 264, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, "Enter next   M menu", 305, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("LEVEL CLEAR!", "关卡完成！"), 195, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.levelName(g.level), 230, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, fmt.Sprintf(g.text("Level score: %d", "本关得分：%d"), g.levelScore), 264, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("Enter next   M menu", "回车下一关   M 返回菜单"), 305, color.RGBA{104, 56, 19, 255})
 }
 
 func (g *Game) drawGameClear(screen *ebiten.Image) {
 	drawPanel(screen, 250, 128, 460, 245)
-	drawCenteredText(screen, "ALL LEVELS CLEAR!", 182, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, "Lulu owns the candy kingdom.", 220, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, fmt.Sprintf("Final score: %d", g.score), 258, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, fmt.Sprintf("Total resets: %d", g.falls), 290, color.RGBA{104, 56, 19, 255})
-	drawCenteredText(screen, "Enter replay   M menu", 330, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("ALL LEVELS CLEAR!", "全部关卡完成！"), 182, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("Lulu owns the candy kingdom.", "露露守住了糖果王国。"), 220, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, fmt.Sprintf(g.text("Final score: %d", "最终得分：%d"), g.score), 258, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, fmt.Sprintf(g.text("Total resets: %d", "总重来次数：%d"), g.falls), 290, color.RGBA{104, 56, 19, 255})
+	drawCenteredText(screen, g.text("Enter replay   M menu", "回车重玩   M 返回菜单"), 330, color.RGBA{104, 56, 19, 255})
 }
 
 // drawDebugOverlay 显示调地图时最常用的世界坐标；鼠标世界 X 等于屏幕 X 加相机偏移。
@@ -355,12 +409,12 @@ func (g *Game) drawDebugOverlay(screen *ebiten.Image) {
 
 	drawPanel(screen, 12, 76, 360, 150)
 	lines := []string{
-		"DEBUG F3",
-		fmt.Sprintf("Player pos: X %.0f  Y %.0f", g.player.X, g.player.Y),
-		fmt.Sprintf("Player rect: X %.0f Y %.0f W %.0f H %.0f", playerRect.X, playerRect.Y, playerRect.W, playerRect.H),
-		fmt.Sprintf("Screen pos: X %.0f  Camera %.0f / %.0f", playerScreenX, g.camera, g.level.Width),
-		fmt.Sprintf("Mouse screen: X %d  Y %d", mouseX, mouseY),
-		fmt.Sprintf("Mouse world: X %.0f  Y %d", worldMouseX, mouseY),
+		g.text("DEBUG F3", "调试 F3"),
+		fmt.Sprintf(g.text("Player pos: X %.0f  Y %.0f", "玩家位置：X %.0f  Y %.0f"), g.player.X, g.player.Y),
+		fmt.Sprintf(g.text("Player rect: X %.0f Y %.0f W %.0f H %.0f", "碰撞框：X %.0f Y %.0f W %.0f H %.0f"), playerRect.X, playerRect.Y, playerRect.W, playerRect.H),
+		fmt.Sprintf(g.text("Screen pos: X %.0f  Camera %.0f / %.0f", "屏幕位置：X %.0f  相机 %.0f / %.0f"), playerScreenX, g.camera, g.level.Width),
+		fmt.Sprintf(g.text("Mouse screen: X %d  Y %d", "鼠标屏幕：X %d  Y %d"), mouseX, mouseY),
+		fmt.Sprintf(g.text("Mouse world: X %.0f  Y %d", "鼠标世界：X %.0f  Y %d"), worldMouseX, mouseY),
 	}
 	for i, line := range lines {
 		drawText(screen, line, 24, 102+i*20, color.RGBA{84, 42, 20, 255})
@@ -385,20 +439,27 @@ func drawPanel(screen *ebiten.Image, x, y, w, h float64) {
 }
 
 func drawCenteredText(screen *ebiten.Image, value string, y int, c color.Color) {
-	x := screenWidth/2 - len(value)*7/2
+	face := textFaceFor(value)
+	scale := textScaleFor(value)
+	x := screenWidth/2 - int(textv2.Advance(value, face)*scale)/2
 	drawText(screen, value, x+2, y+2, color.RGBA{255, 246, 184, 255})
 	drawText(screen, value, x, y, c)
 }
 
 func drawCenteredTextAt(screen *ebiten.Image, value string, centerX, y int, c color.Color) {
-	x := centerX - len(value)*7/2
+	face := textFaceFor(value)
+	scale := textScaleFor(value)
+	x := centerX - int(textv2.Advance(value, face)*scale)/2
 	drawText(screen, value, x+2, y+2, color.RGBA{255, 246, 184, 255})
 	drawText(screen, value, x, y, c)
 }
 
 func drawText(screen *ebiten.Image, value string, x, y int, c color.Color) {
+	face := textFaceFor(value)
+	scale := textScaleFor(value)
 	op := &textv2.DrawOptions{}
-	op.GeoM.Translate(float64(x), float64(y)-uiFace.Metrics().HAscent)
+	op.GeoM.Scale(scale, scale)
+	op.GeoM.Translate(float64(x), float64(y)-face.Metrics().HAscent*scale)
 	op.ColorScale.ScaleWithColor(c)
-	textv2.Draw(screen, value, uiFace, op)
+	textv2.Draw(screen, value, face, op)
 }

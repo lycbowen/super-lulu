@@ -11,16 +11,16 @@ import (
 func main() {
 	assets, err := loadAssets()
 	if err != nil {
-		log.Fatalf("failed to load assets: %v", err)
+		log.Fatalf("加载素材失败：%v", err)
 	}
 
 	g, err := newGame(assets)
 	if err != nil {
-		log.Fatalf("failed to create game: %v", err)
+		log.Fatalf("创建游戏失败：%v", err)
 	}
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Super Lulu")
+	ebiten.SetWindowTitle("超级露露")
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
@@ -37,7 +37,8 @@ func newGame(assets Assets) (*Game, error) {
 		sound:         newSoundManager(),
 		rng:           rand.New(rand.NewSource(time.Now().UnixNano())),
 		levels:        levelPack.Levels,
-		levelSource:   levelPack.SourceLabel(),
+		levelSource:   levelPack.Source,
+		language:      languageEnglish,
 		mode:          modeMenu,
 		unlockedLevel: 0,
 	}

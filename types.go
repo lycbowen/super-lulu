@@ -108,18 +108,20 @@ type Theme struct {
 }
 
 type Level struct {
-	Name      string
-	Subtitle  string
-	Width     float64
-	Spawn     image.Point
-	Platforms []Rect
-	Collect   []Collectible
-	PowerUps  []PowerUp
-	Oranges   []OrangePower
-	Enemies   []Enemy
-	Boss      *Boss
-	Goal      Rect
-	Theme     Theme
+	Name       string
+	NameZH     string
+	Subtitle   string
+	SubtitleZH string
+	Width      float64
+	Spawn      image.Point
+	Platforms  []Rect
+	Collect    []Collectible
+	PowerUps   []PowerUp
+	Oranges    []OrangePower
+	Enemies    []Enemy
+	Boss       *Boss
+	Goal       Rect
+	Theme      Theme
 }
 
 type Assets struct {
@@ -142,6 +144,7 @@ type InputState struct {
 	LevelUp     bool
 	LevelDown   bool
 	ToggleDebug bool
+	ToggleLang  bool
 	DebugLevel  int
 }
 
@@ -152,7 +155,8 @@ type Game struct {
 	input         InputState
 	rng           *rand.Rand
 	levels        []Level
-	levelSource   string
+	levelSource   levelSource
+	language      language
 	level         Level
 	mode          gameMode
 	selectedLevel int
