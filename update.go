@@ -158,6 +158,7 @@ func cloneLevel(level Level) Level {
 }
 
 func (g *Game) resetPlayer() {
+	g.resetBossEncounterOnRespawn()
 	g.player.X = float64(g.level.Spawn.X)
 	g.player.Y = float64(g.level.Spawn.Y)
 	g.player.VX = 0
@@ -169,6 +170,21 @@ func (g *Game) resetPlayer() {
 	g.camera = 0
 	g.projectiles = nil
 	g.shotCooldown = 0
+}
+
+// resetBossEncounterOnRespawn 清理 Boss 战的临时锁场状态，避免玩家回出生点后相机仍被 Boss 房间限制。
+func (g *Game) resetBossEncounterOnRespawn() {
+	boss := g.level.Boss
+	if boss == nil || !boss.Active {
+		return
+	}
+	boss.ArenaLocked = false
+	boss.Aggro = false
+	boss.State = bossPatrol
+	boss.Timer = 0
+	boss.ChargeDir = 0
+	boss.VY = 0
+	boss.AttackCooldown = maxInt(boss.AttackCooldown, 90)
 }
 
 func (g *Game) updatePlaying() {
@@ -198,6 +214,9 @@ func (g *Game) updatePlaying() {
 
 	target := g.player.X - screenWidth*0.38
 	target = math.Max(0, math.Min(target, g.level.Width-screenWidth))
+	if boss, ok := g.lockedBossArena(); ok {
+		target = clampCameraToArena(target, boss.ArenaMinX, boss.ArenaMaxX, g.level.Width)
+	}
 	g.camera += (target - g.camera) * 0.12
 }
 
@@ -224,6 +243,7 @@ func (g *Game) updateBoss() {
 		b.BaseY = b.Rect.Y
 	}
 	g.updateBossAggro(b)
+	g.lockBossArenaIfNeeded(b)
 	if !b.Aggro && !g.rectOnScreen(b.Rect, 180) {
 		g.patrolBoss(b)
 		g.updateBossGravity(b)
@@ -345,9 +365,39 @@ func (g *Game) updateBossAggro(b *Boss) {
 	}
 	playerCenter := g.player.Rect().X + g.player.Rect().W/2
 	bossCenter := b.Rect.X + b.Rect.W/2
-	if math.Abs(playerCenter-bossCenter) < 560 || g.rectOnScreen(b.Rect, 80) {
+	inArena := bossHasArena(b) && playerCenter >= b.ArenaMinX && playerCenter <= b.ArenaMaxX
+	if inArena || math.Abs(playerCenter-bossCenter) < 560 || g.rectOnScreen(b.Rect, 80) {
 		b.Aggro = true
 	}
+}
+
+func bossHasArena(b *Boss) bool {
+	return b != nil && b.ArenaMaxX > b.ArenaMinX
+}
+
+// lockBossArenaIfNeeded 在 Boss 被激活后关门锁场；Boss 死亡后 Active 为 false，锁场自然失效。
+func (g *Game) lockBossArenaIfNeeded(b *Boss) {
+	if !b.Aggro || !bossHasArena(b) {
+		return
+	}
+	b.ArenaLocked = true
+}
+
+func (g *Game) lockedBossArena() (*Boss, bool) {
+	b := g.level.Boss
+	if b == nil || !b.Active || !b.ArenaLocked || !bossHasArena(b) {
+		return nil, false
+	}
+	return b, true
+}
+
+func clampCameraToArena(target, minX, maxX, levelWidth float64) float64 {
+	maxLevelCamera := math.Max(0, levelWidth-screenWidth)
+	if maxX-minX <= screenWidth {
+		centered := minX + (maxX-minX-screenWidth)/2
+		return clamp(centered, 0, maxLevelCamera)
+	}
+	return clamp(target, minX, math.Min(maxX-screenWidth, maxLevelCamera))
 }
 
 func (g *Game) moveBossAroundPlayer(b *Boss) {
@@ -605,6 +655,7 @@ func (g *Game) updatePlayer() {
 	g.resolveVertical()
 
 	p.X = clamp(p.X, 0, g.level.Width-80)
+	g.clampPlayerToLockedArena()
 
 	for i := 0; i < len(g.level.Enemies); i++ {
 		e := g.level.Enemies[i]
@@ -634,6 +685,25 @@ func (g *Game) updatePlayer() {
 		}
 		g.hurtPlayer()
 		return
+	}
+}
+
+// clampPlayerToLockedArena 用玩家碰撞框做边界限制，保证变大后的 Lulu 也不会穿过 Boss 房间门。
+func (g *Game) clampPlayerToLockedArena() {
+	boss, ok := g.lockedBossArena()
+	if !ok {
+		return
+	}
+	p := g.player
+	pr := p.Rect()
+	if pr.X < boss.ArenaMinX {
+		p.X += boss.ArenaMinX - pr.X
+		p.VX = 0
+	}
+	pr = p.Rect()
+	if pr.X+pr.W > boss.ArenaMaxX {
+		p.X += boss.ArenaMaxX - (pr.X + pr.W)
+		p.VX = 0
 	}
 }
 

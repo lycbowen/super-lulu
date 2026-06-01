@@ -66,6 +66,9 @@ type Boss struct {
 	OnGround       bool
 	MinX           float64
 	MaxX           float64
+	ArenaMinX      float64
+	ArenaMaxX      float64
+	ArenaLocked    bool
 	Speed          float64
 	ChargeSpeed    float64
 	ChargeDistance float64

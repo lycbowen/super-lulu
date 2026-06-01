@@ -60,6 +60,8 @@ go run .
 
 调地图时可以在游戏里按 `F3` 打开坐标层。坐标层会显示玩家世界坐标、玩家碰撞框、相机位置，以及鼠标指向位置换算后的世界坐标；把鼠标放到想摆平台或道具的位置，就能直接参考 `Mouse world` 写入 JSON。
 
+Boss 相关字段里，`MinX` / `MaxX` 是 Boss 自己的巡逻和冲撞边界；`ArenaMinX` / `ArenaMaxX` 是 Boss 战锁场范围。玩家进入 Boss 区域并激活 Boss 后，会被限制在这个 Arena 内，相机也会锁在这段范围里。`ArenaLocked` 是运行时状态，手动写地图时保持 `false` 即可。
+
 ## 构建
 
 构建 Windows GUI 可执行文件：

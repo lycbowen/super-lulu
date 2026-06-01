@@ -109,6 +109,9 @@ func (g *Game) drawWorld(screen *ebiten.Image) {
 	if g.bossBlocksGoal() {
 		drawText(screen, "Defeat Niuniu first!", int(g.level.Goal.X-g.camera)-36, int(g.level.Goal.Y)-14, color.RGBA{104, 56, 19, 255})
 	}
+	if boss, ok := g.lockedBossArena(); ok {
+		g.drawBossArenaGates(screen, boss)
+	}
 	g.drawPlayer(screen)
 }
 
@@ -224,6 +227,23 @@ func drawGoal(screen *ebiten.Image, r Rect, camera float64) {
 	ebitenutil.DrawRect(screen, x, r.Y, 8, r.H, color.RGBA{126, 84, 45, 255})
 	ebitenutil.DrawRect(screen, x+8, r.Y+8, 74, 42, color.RGBA{255, 223, 74, 255})
 	ebitenutil.DrawRect(screen, x+18, r.Y+16, 48, 18, color.RGBA{255, 151, 53, 255})
+}
+
+func (g *Game) drawBossArenaGates(screen *ebiten.Image, boss *Boss) {
+	drawArenaGate(screen, boss.ArenaMinX-g.camera)
+	drawArenaGate(screen, boss.ArenaMaxX-g.camera)
+	drawText(screen, "Boss arena locked", int(boss.ArenaMinX-g.camera)+18, 92, color.RGBA{104, 56, 19, 255})
+}
+
+func drawArenaGate(screen *ebiten.Image, x float64) {
+	if x < -24 || x > screenWidth+24 {
+		return
+	}
+	ebitenutil.DrawRect(screen, x-5, 76, 10, screenHeight-76, color.RGBA{104, 56, 19, 185})
+	ebitenutil.DrawRect(screen, x-12, 76, 24, 8, color.RGBA{255, 205, 78, 230})
+	for y := 104; y < screenHeight; y += 46 {
+		ebitenutil.DrawRect(screen, x-10, float64(y), 20, 8, color.RGBA{255, 205, 78, 185})
+	}
 }
 
 func (g *Game) drawPlayer(screen *ebiten.Image) {
