@@ -35,17 +35,22 @@ func (g *Game) updateMenu() {
 		return
 	}
 	if g.input.Start {
-		g.startLevel(g.selectedLevel)
+		if g.selectedLevel <= g.unlockedLevel {
+			g.startLevel(g.selectedLevel)
+		}
 	}
 	if g.input.LevelDown {
+		g.syncLevelSelectPage()
 		g.mode = modeLevelSelect
 	}
 	if g.input.LevelUp {
+		g.syncLevelSelectPage()
 		g.mode = modeLevelSelect
 	}
 }
 
 func (g *Game) updateLevelSelect() {
+	g.syncLevelSelectPage()
 	if g.input.ToggleLang {
 		g.toggleLanguage()
 	}
@@ -57,13 +62,21 @@ func (g *Game) updateLevelSelect() {
 		return
 	}
 	if g.input.LevelUp {
-		g.selectedLevel = maxInt(0, g.selectedLevel-1)
+		g.moveSelectedLevelUp()
 	}
 	if g.input.LevelDown {
-		g.selectedLevel = minInt(g.unlockedLevel, g.selectedLevel+1)
+		g.moveSelectedLevelDown()
+	}
+	if g.input.PageLeft {
+		g.moveLevelSelectPage(-1)
+	}
+	if g.input.PageRight {
+		g.moveLevelSelectPage(1)
 	}
 	if g.input.Start {
-		g.startLevel(g.selectedLevel)
+		if g.selectedLevel <= g.unlockedLevel {
+			g.startLevel(g.selectedLevel)
+		}
 	}
 }
 
@@ -74,10 +87,88 @@ func (g *Game) startDebugLevelByNumber() bool {
 	index := g.input.DebugLevel - 1
 	if index < len(g.levels) {
 		g.unlockedLevel = maxInt(g.unlockedLevel, index)
+		g.setSelectedLevel(index)
 		g.startLevel(index)
 		return true
 	}
 	return false
+}
+
+func (g *Game) levelSelectPageCount() int {
+	if len(g.levels) == 0 {
+		return 1
+	}
+	return (len(g.levels) + levelSelectPageSize - 1) / levelSelectPageSize
+}
+
+func (g *Game) syncLevelSelectPage() {
+	g.setSelectedLevel(g.selectedLevel)
+}
+
+func (g *Game) maxSelectableLevel() int {
+	if len(g.levels) == 0 {
+		return 0
+	}
+	return clampInt(g.unlockedLevel, 0, len(g.levels)-1)
+}
+
+func (g *Game) maxSelectablePage() int {
+	if len(g.levels) == 0 {
+		return 0
+	}
+	return g.maxSelectableLevel() / levelSelectPageSize
+}
+
+func (g *Game) firstLevelOnPage(page int) int {
+	page = clampInt(page, 0, g.levelSelectPageCount()-1)
+	return page * levelSelectPageSize
+}
+
+func (g *Game) lastLevelOnPage(page int) int {
+	first := g.firstLevelOnPage(page)
+	return minInt(len(g.levels)-1, first+levelSelectPageSize-1)
+}
+
+func (g *Game) setSelectedLevel(index int) {
+	if len(g.levels) == 0 {
+		g.selectedLevel = 0
+		g.levelSelectPage = 0
+		return
+	}
+	g.selectedLevel = clampInt(index, 0, g.maxSelectableLevel())
+	g.levelSelectPage = clampInt(g.selectedLevel/levelSelectPageSize, 0, g.levelSelectPageCount()-1)
+}
+
+func (g *Game) moveSelectedLevelUp() {
+	first := g.firstLevelOnPage(g.levelSelectPage)
+	if g.selectedLevel > first {
+		g.setSelectedLevel(g.selectedLevel - 1)
+		return
+	}
+	if g.levelSelectPage > 0 {
+		g.setSelectedLevel(g.lastLevelOnPage(g.levelSelectPage - 1))
+	}
+}
+
+func (g *Game) moveSelectedLevelDown() {
+	last := g.lastLevelOnPage(g.levelSelectPage)
+	if g.selectedLevel < last {
+		g.setSelectedLevel(g.selectedLevel + 1)
+		return
+	}
+	if g.levelSelectPage < g.maxSelectablePage() {
+		g.setSelectedLevel(g.firstLevelOnPage(g.levelSelectPage + 1))
+	}
+}
+
+func (g *Game) moveLevelSelectPage(delta int) {
+	targetPage := clampInt(g.levelSelectPage+delta, 0, g.maxSelectablePage())
+	if targetPage == g.levelSelectPage {
+		return
+	}
+	offset := g.selectedLevel - g.firstLevelOnPage(g.levelSelectPage)
+	target := g.firstLevelOnPage(targetPage) + offset
+	g.setSelectedLevel(clampInt(target, g.firstLevelOnPage(targetPage), minInt(g.lastLevelOnPage(targetPage), g.maxSelectableLevel())))
 }
 
 func (g *Game) updatePlayingMode() {
@@ -131,7 +222,7 @@ func (g *Game) updateGameClear() {
 
 func (g *Game) startLevel(index int) {
 	g.currentLevel = clampInt(index, 0, len(g.levels)-1)
-	g.selectedLevel = g.currentLevel
+	g.setSelectedLevel(g.currentLevel)
 	g.loadLevel(g.currentLevel)
 	g.mode = modePlaying
 }

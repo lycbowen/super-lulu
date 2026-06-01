@@ -143,32 +143,35 @@ type InputState struct {
 	Menu        bool
 	LevelUp     bool
 	LevelDown   bool
+	PageLeft    bool
+	PageRight   bool
 	ToggleDebug bool
 	ToggleLang  bool
 	DebugLevel  int
 }
 
 type Game struct {
-	player        *Player
-	assets        Assets
-	sound         *SoundManager
-	input         InputState
-	rng           *rand.Rand
-	levels        []Level
-	levelSource   levelSource
-	language      language
-	level         Level
-	mode          gameMode
-	selectedLevel int
-	currentLevel  int
-	unlockedLevel int
-	camera        float64
-	score         int
-	levelScore    int
-	falls         int
-	hasWeapon     bool
-	showDebug     bool
-	projectiles   []Projectile
-	shotCooldown  int
-	invulnerable  int
+	player          *Player
+	assets          Assets
+	sound           *SoundManager
+	input           InputState
+	rng             *rand.Rand
+	levels          []Level
+	levelSource     levelSource
+	language        language
+	level           Level
+	mode            gameMode
+	selectedLevel   int
+	levelSelectPage int
+	currentLevel    int
+	unlockedLevel   int
+	camera          float64
+	score           int
+	levelScore      int
+	falls           int
+	hasWeapon       bool
+	showDebug       bool
+	projectiles     []Projectile
+	shotCooldown    int
+	invulnerable    int
 }

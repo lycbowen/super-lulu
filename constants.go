@@ -4,6 +4,8 @@ const (
 	screenWidth  = 960
 	screenHeight = 540
 
+	levelSelectPageSize = 4
+
 	gravity      = 0.55
 	moveAccel    = 0.6
 	airAccel     = 0.36

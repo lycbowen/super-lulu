@@ -76,3 +76,109 @@ func TestResolveBossVerticalLandsWithEnoughPlatformSupport(t *testing.T) {
 		t.Fatal("expected boss to be on ground after landing")
 	}
 }
+
+func TestLevelSelectPaginationPageCount(t *testing.T) {
+	g := newTestGameWithLevels(6)
+
+	if got := g.levelSelectPageCount(); got != 2 {
+		t.Fatalf("expected 2 pages, got %d", got)
+	}
+	if got := g.lastLevelOnPage(1); got != 5 {
+		t.Fatalf("expected last level on page 2 to be 5, got %d", got)
+	}
+}
+
+func TestLevelSelectDownMovesToNextPage(t *testing.T) {
+	g := newTestGameWithLevels(6)
+	g.setSelectedLevel(3)
+
+	g.moveSelectedLevelDown()
+
+	if g.selectedLevel != 4 {
+		t.Fatalf("expected selected level 4, got %d", g.selectedLevel)
+	}
+	if g.levelSelectPage != 1 {
+		t.Fatalf("expected page 1, got %d", g.levelSelectPage)
+	}
+}
+
+func TestLevelSelectUpMovesToPreviousPage(t *testing.T) {
+	g := newTestGameWithLevels(6)
+	g.setSelectedLevel(4)
+
+	g.moveSelectedLevelUp()
+
+	if g.selectedLevel != 3 {
+		t.Fatalf("expected selected level 3, got %d", g.selectedLevel)
+	}
+	if g.levelSelectPage != 0 {
+		t.Fatalf("expected page 0, got %d", g.levelSelectPage)
+	}
+}
+
+func TestMoveLevelSelectPagePreservesClosestRow(t *testing.T) {
+	g := newTestGameWithLevels(6)
+	g.setSelectedLevel(2)
+
+	g.moveLevelSelectPage(1)
+
+	if g.selectedLevel != 5 {
+		t.Fatalf("expected selected level 5, got %d", g.selectedLevel)
+	}
+	if g.levelSelectPage != 1 {
+		t.Fatalf("expected page 1, got %d", g.levelSelectPage)
+	}
+}
+
+func TestSetSelectedLevelClampsToUnlockedLevel(t *testing.T) {
+	g := newTestGameWithLevels(6)
+	g.unlockedLevel = 0
+
+	g.setSelectedLevel(4)
+
+	if g.selectedLevel != 0 {
+		t.Fatalf("expected selected level to clamp to 0, got %d", g.selectedLevel)
+	}
+	if g.levelSelectPage != 0 {
+		t.Fatalf("expected page 0, got %d", g.levelSelectPage)
+	}
+}
+
+func TestLevelSelectCannotMoveDownIntoLockedLevels(t *testing.T) {
+	g := newTestGameWithLevels(6)
+	g.unlockedLevel = 0
+	g.setSelectedLevel(0)
+
+	g.moveSelectedLevelDown()
+
+	if g.selectedLevel != 0 {
+		t.Fatalf("expected selected level to stay 0, got %d", g.selectedLevel)
+	}
+}
+
+func TestLevelSelectCannotPageIntoLockedLevels(t *testing.T) {
+	g := newTestGameWithLevels(6)
+	g.unlockedLevel = 0
+	g.setSelectedLevel(0)
+
+	g.moveLevelSelectPage(1)
+
+	if g.selectedLevel != 0 {
+		t.Fatalf("expected selected level to stay 0, got %d", g.selectedLevel)
+	}
+	if g.levelSelectPage != 0 {
+		t.Fatalf("expected page to stay 0, got %d", g.levelSelectPage)
+	}
+}
+
+func newTestGameWithLevels(count int) *Game {
+	levels := make([]Level, count)
+	for i := range levels {
+		levels[i] = Level{Name: "test"}
+	}
+	return &Game{
+		player:        &Player{},
+		levels:        levels,
+		unlockedLevel: count - 1,
+	}
+}

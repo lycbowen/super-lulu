@@ -21,6 +21,8 @@ func (i *InputState) Update() {
 	i.Menu = inpututil.IsKeyJustPressed(ebiten.KeyM)
 	i.LevelUp = inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) || inpututil.IsKeyJustPressed(ebiten.KeyW)
 	i.LevelDown = inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) || inpututil.IsKeyJustPressed(ebiten.KeyS)
+	i.PageLeft = inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) || inpututil.IsKeyJustPressed(ebiten.KeyA)
+	i.PageRight = inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) || inpututil.IsKeyJustPressed(ebiten.KeyD)
 	i.ToggleDebug = inpututil.IsKeyJustPressed(ebiten.KeyF3)
 	i.ToggleLang = inpututil.IsKeyJustPressed(ebiten.KeyL)
 

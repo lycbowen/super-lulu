@@ -355,8 +355,12 @@ func (g *Game) drawLevelSelect(screen *ebiten.Image) {
 	drawPanel(screen, 220, 92, 520, 350)
 	drawCenteredText(screen, g.text("CHOOSE A LEVEL", "选择关卡"), 142, color.RGBA{111, 61, 23, 255})
 	drawCenteredText(screen, g.levelSourceLabel(), 166, color.RGBA{135, 82, 31, 255})
-	for i, level := range g.levels {
-		y := 198 + i*58
+	first := g.firstLevelOnPage(g.levelSelectPage)
+	last := g.lastLevelOnPage(g.levelSelectPage)
+	for i := first; i <= last; i++ {
+		level := g.levels[i]
+		row := i - first
+		y := 190 + row*46
 		locked := i > g.unlockedLevel
 		prefix := "  "
 		if i == g.selectedLevel {
@@ -370,10 +374,12 @@ func (g *Game) drawLevelSelect(screen *ebiten.Image) {
 		}
 		drawText(screen, name, 285, y, c)
 		if !locked {
-			drawText(screen, g.levelSubtitle(level), 305, y+22, color.RGBA{135, 82, 31, 255})
+			drawText(screen, g.levelSubtitle(level), 305, y+19, color.RGBA{135, 82, 31, 255})
 		}
 	}
-	drawCenteredText(screen, g.text("Enter start   Esc menu   L language", "回车开始   Esc 返回菜单   L语言"), 405, color.RGBA{104, 56, 19, 255})
+	pageText := fmt.Sprintf(g.text("Page %d/%d", "第 %d/%d 页"), g.levelSelectPage+1, g.levelSelectPageCount())
+	drawCenteredText(screen, pageText, 384, color.RGBA{135, 82, 31, 255})
+	drawCenteredText(screen, g.text("Enter start   Esc menu   Left/Right page   L language", "回车开始   Esc返回   左/右翻页   L语言"), 416, color.RGBA{104, 56, 19, 255})
 }
 
 func (g *Game) drawPause(screen *ebiten.Image) {
