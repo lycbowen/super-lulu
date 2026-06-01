@@ -460,7 +460,7 @@ func (g *Game) resolveBossVertical(b *Boss) bool {
 		if !br.Intersects(platform) {
 			continue
 		}
-		if b.VY >= 0 && br.Y+br.H-b.VY <= platform.Y+8 {
+		if b.VY >= 0 && bossHasPlatformSupport(br, platform) && br.Y+br.H-b.VY <= platform.Y+8 {
 			b.Rect.Y += platform.Y - (br.Y + br.H)
 			b.OnGround = true
 			return true
@@ -480,7 +480,7 @@ func (g *Game) resolveBossSlamLanding(b *Boss) bool {
 			continue
 		}
 		nearTarget := math.Abs((br.X+br.W/2)-(b.SlamTargetX+b.Rect.W/2)) <= b.Rect.W*0.75
-		if nearTarget && b.VY >= 0 && br.Y+br.H-b.VY <= platform.Y+8 {
+		if nearTarget && b.VY >= 0 && bossHasPlatformSupport(br, platform) && br.Y+br.H-b.VY <= platform.Y+8 {
 			b.Rect.Y += platform.Y - (br.Y + br.H)
 			b.OnGround = true
 			return true
@@ -491,6 +491,13 @@ func (g *Game) resolveBossSlamLanding(b *Boss) bool {
 		return true
 	}
 	return false
+}
+
+// bossHasPlatformSupport 要求 Boss 和平台有足够的水平重叠，避免只蹭到平台边缘时也被判定为站住。
+func bossHasPlatformSupport(bossRect, platform Rect) bool {
+	overlap := math.Min(bossRect.X+bossRect.W, platform.X+platform.W) - math.Max(bossRect.X, platform.X)
+	minSupport := bossRect.W * 0.35
+	return overlap >= minSupport
 }
 
 func (g *Game) updateBossGravity(b *Boss) {

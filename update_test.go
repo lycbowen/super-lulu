@@ -34,3 +34,45 @@ func TestResetPlayerClearsBossArenaLock(t *testing.T) {
 		t.Fatalf("expected camera reset to 0, got %v", g.camera)
 	}
 }
+
+func TestResolveBossVerticalNeedsEnoughPlatformSupport(t *testing.T) {
+	g := &Game{
+		level: Level{
+			Platforms: []Rect{{X: 0, Y: 110, W: 100, H: 20}},
+		},
+	}
+	boss := &Boss{
+		Rect: Rect{X: 95, Y: 91, W: 100, H: 20},
+		VY:   1,
+	}
+
+	landed := g.resolveBossVertical(boss)
+
+	if landed {
+		t.Fatal("expected boss to keep falling when only touching the platform edge")
+	}
+	if boss.OnGround {
+		t.Fatal("expected boss to be off ground without enough platform support")
+	}
+}
+
+func TestResolveBossVerticalLandsWithEnoughPlatformSupport(t *testing.T) {
+	g := &Game{
+		level: Level{
+			Platforms: []Rect{{X: 0, Y: 110, W: 100, H: 20}},
+		},
+	}
+	boss := &Boss{
+		Rect: Rect{X: 60, Y: 91, W: 100, H: 20},
+		VY:   1,
+	}
+
+	landed := g.resolveBossVertical(boss)
+
+	if !landed {
+		t.Fatal("expected boss to land when enough of its body is supported")
+	}
+	if !boss.OnGround {
+		t.Fatal("expected boss to be on ground after landing")
+	}
+}
