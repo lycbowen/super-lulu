@@ -6,6 +6,7 @@ import (
 
 func (g *Game) Update() error {
 	g.input.Update()
+	g.sound.Update()
 	if g.input.ToggleDebug {
 		g.showDebug = !g.showDebug
 	}
@@ -201,6 +202,7 @@ func (g *Game) updatePlaying() {
 
 	if g.player.Rect().Intersects(g.level.Goal) && !g.bossBlocksGoal() {
 		g.unlockNextLevel()
+		g.playSound(soundLevelClear)
 		g.mode = modeLevelClear
 		return
 	}
@@ -648,6 +650,7 @@ func (g *Game) updatePlayer() {
 	if p.OnGround && g.input.Jump {
 		p.VY = jumpVelocity
 		p.OnGround = false
+		g.playSound(soundJump)
 	}
 	if g.input.Shoot {
 		g.shootIceCream()
@@ -672,6 +675,7 @@ func (g *Game) updatePlayer() {
 				g.level.Enemies = append(g.level.Enemies[:i], g.level.Enemies[i+1:]...)
 				g.score += 200
 				g.levelScore += 200
+				g.playSound(soundBossHit)
 				p.VY = jumpVelocity * 0.48
 				p.OnGround = false
 				i--
@@ -734,6 +738,7 @@ func (g *Game) shootIceCream() {
 		Active:      true,
 	})
 	g.shotCooldown = 18
+	g.playSound(soundShoot)
 }
 
 // resolveHorizontal 只解决玩家横向进入平台的问题；纵向碰撞分开处理可以减少斜角卡住的情况。
@@ -782,6 +787,7 @@ func (g *Game) updateCollectibles() {
 			c.Collected = true
 			g.score += 100
 			g.levelScore += 100
+			g.playSound(soundCollect)
 		}
 	}
 }
@@ -795,6 +801,7 @@ func (g *Game) updatePowerUps() {
 			g.hasWeapon = true
 			g.score += 250
 			g.levelScore += 250
+			g.playSound(soundPowerUp)
 		}
 	}
 }
@@ -809,6 +816,7 @@ func (g *Game) updateOranges() {
 			g.invulnerable = 0
 			g.score += 250
 			g.levelScore += 250
+			g.playSound(soundPowerUp)
 		}
 	}
 }
@@ -820,9 +828,11 @@ func (g *Game) hurtPlayer() {
 	if g.player.Big {
 		g.player.Big = false
 		g.invulnerable = invulnerableFrames
+		g.playSound(soundHurt)
 		return
 	}
 	g.falls++
+	g.playSound(soundHurt)
 	g.resetPlayer()
 }
 
@@ -845,6 +855,7 @@ func (g *Game) updateProjectiles() {
 				g.level.Enemies = append(g.level.Enemies[:j], g.level.Enemies[j+1:]...)
 				g.score += 150
 				g.levelScore += 150
+				g.playSound(soundBossHit)
 				p.Active = false
 				break
 			}
@@ -880,5 +891,8 @@ func (g *Game) damageBoss(amount int) {
 		g.level.Boss.Active = false
 		g.score += 1000
 		g.levelScore += 1000
+		g.playSound(soundBossDefeat)
+		return
 	}
+	g.playSound(soundBossHit)
 }

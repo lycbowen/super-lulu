@@ -34,6 +34,7 @@ func newGame(assets Assets) (*Game, error) {
 	g := &Game{
 		player:        &Player{Facing: 1},
 		assets:        assets,
+		sound:         newSoundManager(),
 		rng:           rand.New(rand.NewSource(time.Now().UnixNano())),
 		levels:        levels,
 		mode:          modeMenu,

@@ -148,6 +148,7 @@ type InputState struct {
 type Game struct {
 	player        *Player
 	assets        Assets
+	sound         *SoundManager
 	input         InputState
 	rng           *rand.Rand
 	levels        []Level
