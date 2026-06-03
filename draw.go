@@ -349,6 +349,7 @@ func (g *Game) drawMenu(screen *ebiten.Image) {
 	drawCenteredText(screen, g.text("Enter  Start", "回车  开始"), 260, color.RGBA{104, 56, 19, 255})
 	drawCenteredText(screen, g.text("Up/Down  Level Select", "上/下  选择关卡"), 292, color.RGBA{104, 56, 19, 255})
 	drawCenteredText(screen, g.text("A/D move   Space jump   J ice cream   L language", "A/D移动  空格跳跃  J冰淇淋  L语言"), 330, color.RGBA{135, 82, 31, 255})
+	drawCenteredText(screen, fmt.Sprintf(g.text("Version: %s", "版本：%s"), appVersion), 352, color.RGBA{135, 82, 31, 255})
 }
 
 func (g *Game) drawLevelSelect(screen *ebiten.Image) {

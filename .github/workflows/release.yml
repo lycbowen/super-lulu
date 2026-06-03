@@ -44,6 +44,19 @@ jobs:
 
           "tag=$tag" >> $env:GITHUB_OUTPUT
 
+      - name: Generate version file
+        shell: pwsh
+        run: |
+          $tag = "${{ steps.version.outputs.tag }}"
+          $escapedTag = $tag.Replace('\', '\\').Replace('"', '\"')
+          @"
+          package main
+
+          func init() {
+          	appVersion = "$escapedTag"
+          }
+          "@ | Set-Content -Path version_ci.go -Encoding UTF8
+
       - name: Download dependencies
         shell: pwsh
         run: go mod download
